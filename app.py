@@ -32,7 +32,7 @@ def get_cluster_data():
         FROM `QE-server-pool`
         WHERE state = "sshFailed"
             AND os != "windows"
-            AND (poolId = "regression" or "regression" in poolId) LIMIT 1
+            AND (poolId = "regression" or "regression" in poolId)
         """
         
         logger.info("Executing cluster query...")
