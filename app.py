@@ -195,8 +195,11 @@ def main():
         logger.info("Logging failed hosts...")
         email_content = log_failed_hosts(failed_hosts, working_hosts)
         
-        # Export email content to environment variable for Jenkins
-        os.environ['SSH_REPORT_CONTENT'] = email_content
+        # Write beautiful email content to file for Jenkins to read
+        with open("ssh_report.txt", "w") as f:
+            f.write(email_content)
+        
+        logger.info("Email content written to ssh_report.txt")
         
         
         logger.info("SSH Fail Reporter workflow completed successfully!")
