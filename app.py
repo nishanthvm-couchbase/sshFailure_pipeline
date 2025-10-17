@@ -201,8 +201,7 @@ def main():
             f.write(email_content)
         
         # Also create HTML version for better email formatting
-        html_content = email_content.replace('\n', '<br>\n')
-        html_content = f"<pre style='font-family: monospace; white-space: pre-wrap;'>{html_content}</pre>"
+        html_content = f"<pre style='font-family: monospace; white-space: pre-wrap; line-height: 1.2; margin: 0; padding: 10px;'>{email_content}</pre>"
         
         # Create version with explicit line breaks for email clients
         email_content_with_breaks = email_content.replace('\n', '\n\n')
