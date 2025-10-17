@@ -117,38 +117,44 @@ def create_email_content(failed_hosts, working_hosts):
     """Create beautiful formatted email content"""
     if not failed_hosts:
         content = f"""
-╔══════════════════════════════════════════════════════════════╗
-║                    SSH CONNECTIVITY REPORT                   ║
-╠══════════════════════════════════════════════════════════════╣
-║ Status: ✅ ALL VMs ARE WORKING                               ║
-║ Working VMs: {len(working_hosts)}                            ║
-║ Failed VMs: 0                                                ║
-╚══════════════════════════════════════════════════════════════╝
+========================================
+        SSH CONNECTIVITY REPORT
+========================================
+
+Status: ✅ ALL VMs ARE WORKING
+Working VMs: {len(working_hosts)}
+Failed VMs: 0
 
 All SSH connections are working properly. No action required.
 """
     else:
         content = f"""
-╔══════════════════════════════════════════════════════════════╗
-║                 SSH CONNECTION FAILURES                      ║
-╠══════════════════════════════════════════════════════════════╣
-║ Status: ❌ {len(failed_hosts)} VM(S) HAVE SSH ISSUES         ║
-║ Working VMs: {len(working_hosts)}                            ║
-║ Failed VMs: {len(failed_hosts)}                              ║
-╚══════════════════════════════════════════════════════════════╝
+========================================
+        SSH CONNECTION FAILURES
+========================================
 
+Status: ❌ {len(failed_hosts)} VM(S) HAVE SSH ISSUES
+Working VMs: {len(working_hosts)}
+Failed VMs: {len(failed_hosts)}
+
+----------------------------------------
 🔴 FAILED VMs (SSH connectivity broken):
+----------------------------------------
 """
         for i, vm in enumerate(failed_hosts, 1):
             content += f"   {i}. {vm['host']} ({vm['ip']})\n"
         
         content += f"""
+----------------------------------------
 📊 SUMMARY:
+----------------------------------------
    • Total VMs checked: {len(failed_hosts) + len(working_hosts)}
    • Working VMs: {len(working_hosts)}
    • Failed VMs: {len(failed_hosts)}
    
+----------------------------------------
 ⚠️  ACTION REQUIRED:
+----------------------------------------
    Please investigate and resolve the SSH connectivity issues for the failed VMs listed above.
 """
     
@@ -199,7 +205,20 @@ def main():
         with open("ssh_report.txt", "w") as f:
             f.write(email_content)
         
-        logger.info("Email content written to ssh_report.txt")
+        # Also create HTML version for better email formatting
+        html_content = email_content.replace('\n', '<br>\n')
+        html_content = f"<pre style='font-family: monospace; white-space: pre-wrap;'>{html_content}</pre>"
+        
+        # Create version with explicit line breaks for email clients
+        email_content_with_breaks = email_content.replace('\n', '\n\n')
+        
+        with open("ssh_report.html", "w") as f:
+            f.write(html_content)
+        
+        with open("ssh_report_email.txt", "w") as f:
+            f.write(email_content_with_breaks)
+        
+        logger.info("Email content written to ssh_report.txt, ssh_report.html, and ssh_report_email.txt")
         
         
         logger.info("SSH Fail Reporter workflow completed successfully!")
