@@ -114,10 +114,8 @@ def update_vm_states_to_available(working_hosts):
         raise
 
 def create_email_content(failed_hosts, working_hosts):
-    """Create beautiful formatted email content"""
     if not failed_hosts:
-        content = f"""
-========================================
+        content = f"""========================================
         SSH CONNECTIVITY REPORT
 ========================================
 
@@ -125,11 +123,9 @@ Status: ✅ ALL VMs ARE WORKING
 Working VMs: {len(working_hosts)}
 Failed VMs: 0
 
-All SSH connections are working properly. No action required.
-"""
+All SSH connections are working properly. No action required."""
     else:
-        content = f"""
-========================================
+        content = f"""========================================
         SSH CONNECTION FAILURES
 ========================================
 
@@ -139,24 +135,23 @@ Failed VMs: {len(failed_hosts)}
 
 ----------------------------------------
 🔴 FAILED VMs (SSH connectivity broken):
-----------------------------------------
-"""
+----------------------------------------"""
         for i, vm in enumerate(failed_hosts, 1):
-            content += f"   {i}. {vm['host']} ({vm['ip']})\n"
+            content += f"\n   {i}. {vm['host']} ({vm['ip']})"
         
         content += f"""
+
 ----------------------------------------
 📊 SUMMARY:
 ----------------------------------------
    • Total VMs checked: {len(failed_hosts) + len(working_hosts)}
    • Working VMs: {len(working_hosts)}
    • Failed VMs: {len(failed_hosts)}
-   
+
 ----------------------------------------
 ⚠️  ACTION REQUIRED:
 ----------------------------------------
-   Please investigate and resolve the SSH connectivity issues for the failed VMs listed above.
-"""
+   Please investigate and resolve the SSH connectivity issues for the failed VMs listed above."""
     
     return content
 
