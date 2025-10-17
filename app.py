@@ -113,19 +113,66 @@ def update_vm_states_to_available(working_hosts):
         logger.error(f"Error updating VM states: {e}")
         raise
 
-def log_failed_hosts(failed_hosts):
+def create_email_content(failed_hosts, working_hosts):
+    """Create beautiful formatted email content"""
     if not failed_hosts:
-        logger.info("No failed hosts to report")
-        return
+        content = f"""
+╔══════════════════════════════════════════════════════════════╗
+║                    SSH CONNECTIVITY REPORT                   ║
+╠══════════════════════════════════════════════════════════════╣
+║ Status: ✅ ALL VMs ARE WORKING                               ║
+║ Working VMs: {len(working_hosts)}                            ║
+║ Failed VMs: 0                                                ║
+╚══════════════════════════════════════════════════════════════╝
+
+All SSH connections are working properly. No action required.
+"""
+    else:
+        content = f"""
+╔══════════════════════════════════════════════════════════════╗
+║                 SSH CONNECTION FAILURES                      ║
+╠══════════════════════════════════════════════════════════════╣
+║ Status: ❌ {len(failed_hosts)} VM(S) HAVE SSH ISSUES         ║
+║ Working VMs: {len(working_hosts)}                            ║
+║ Failed VMs: {len(failed_hosts)}                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+🔴 FAILED VMs (SSH connectivity broken):
+"""
+        for i, vm in enumerate(failed_hosts, 1):
+            content += f"   {i}. {vm['host']} ({vm['ip']})\n"
+        
+        content += f"""
+📊 SUMMARY:
+   • Total VMs checked: {len(failed_hosts) + len(working_hosts)}
+   • Working VMs: {len(working_hosts)}
+   • Failed VMs: {len(failed_hosts)}
+   
+⚠️  ACTION REQUIRED:
+   Please investigate and resolve the SSH connectivity issues for the failed VMs listed above.
+"""
     
-    logger.info(f"SSH Connection Failures - {len(failed_hosts)} VMs Affected")
-    logger.info("SSH connectivity is broken for the following VMs:")
+    return content
+
+def log_failed_hosts(failed_hosts, working_hosts):
+    """Log failed hosts and create email content"""
+    email_content = create_email_content(failed_hosts, working_hosts)
     
-    for vm in failed_hosts:
-        logger.info(f"• {vm['host']} ({vm['ip']})")
+    # Print beautiful formatted content to stdout for Jenkins
+    print(email_content)
     
-    logger.info(f"Total affected VMs: {len(failed_hosts)}")
-    logger.info("Please investigate and resolve the SSH connectivity issues.")
+    # Also log for console output
+    if not failed_hosts:
+        logger.info("All VMs are working - no SSH issues detected")
+    else:
+        logger.info(f"SSH Connection Failures - {len(failed_hosts)} VMs Affected")
+        logger.info("SSH connectivity is broken for the following VMs:")
+        for vm in failed_hosts:
+            logger.info(f"• {vm['host']} ({vm['ip']})")
+        logger.info(f"Total affected VMs: {len(failed_hosts)}")
+        logger.info("Please investigate and resolve the SSH connectivity issues.")
+    
+    return email_content
 
 
 def main():
@@ -146,7 +193,10 @@ def main():
         update_vm_states_to_available(working_hosts)
         
         logger.info("Logging failed hosts...")
-        log_failed_hosts(failed_hosts)
+        email_content = log_failed_hosts(failed_hosts, working_hosts)
+        
+        # Export email content to environment variable for Jenkins
+        os.environ['SSH_REPORT_CONTENT'] = email_content
         
         
         logger.info("SSH Fail Reporter workflow completed successfully!")
